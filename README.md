@@ -3,7 +3,7 @@ PermsHiker
 2016-06-16
 
 
-PermsHiker migrates permissions from a server to another.
+PermsHiker helps migrating permissions from a server to another.
 
 PermsHiker can be installed as a [planet](https://github.com/lingtalfi/Observer/blob/master/article/article.planetReference.eng.md).
 
