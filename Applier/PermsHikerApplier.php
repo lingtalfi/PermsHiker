@@ -4,6 +4,7 @@ namespace PermsHiker\Applier;
 
 use Bat\PermTool;
 use PermsHiker\Exception\PermsHikerException;
+use PermsHiker\Tool\PermsHikerTool;
 
 
 /**
@@ -55,30 +56,14 @@ class PermsHikerApplier
                 $targetDir = rtrim($targetDir, '/');
 
                 foreach ($lines as $line) {
-                    $line = trim($line);
+                    
+                    list($mode, $ownerGroup, $owner, $path) = PermsHikerTool::pullDataFromPermsMapEntry($line);
+                    $ownerGroup = $this->getRealOwnerGroup($ownerGroup);
+                    $owner = $this->getRealOwner($owner);
+                    $realFile = $targetDir . '/' . $path;
 
-                    /**
-                     * parsing the separator from the end,
-                     * so to avoid potential conflict of a path
-                     * that contains the separator.
-                     */
-                    $enil = strrev($line);
-                    $p = explode(':', $enil, 4);
-                    if (4 === count($p)) {
-                        $mode = strrev($p[0]);
-                        $ownerGroup = $this->getRealOwnerGroup(strrev($p[1]));
-                        $owner = $this->getRealOwner(strrev($p[2]));
-                        $path = strrev($p[3]);
-
-
-                        $realFile = $targetDir . '/' . $path;
-
-                        if (false === PermTool::chperms($realFile, $mode, $owner, $ownerGroup)) {
-                            $this->error("could not change the permissions of $realFile");
-                        }                        
-                    }
-                    else {
-                        $this->error("invalid perms list entry notation, please check the doc: $line");
+                    if (false === PermTool::chperms($realFile, $mode, $owner, $ownerGroup)) {
+                        $this->error("could not change the permissions of $realFile");
                     }
                 }
             }

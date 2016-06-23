@@ -11,6 +11,7 @@ use Bat\FileSystemTool;
 use Bat\LocalHostTool;
 use DirScanner\DirScanner;
 use PermsHiker\Exception\PermsHikerException;
+use PermsHiker\Filter\PermsHikerFilterInterface;
 
 class PermsHikerParser
 {
@@ -42,14 +43,21 @@ class PermsHikerParser
      * Any error turns into an exception (it does everything or nothing, but not half of the task).
      */
     private $strictMode;
+    /**
+     * When dirsOnly mode is on (default is off), only dirs are collected (not files)
+     */
+    private $dirsOnly;
+    private $filters;
 
     public function __construct()
     {
         $this->commonPerms = [];
         $this->errors = [];
+        $this->filters = [];
         $this->separator = ':';
         $this->allowOwnerId = true;
         $this->strictMode = false;
+        $this->dirsOnly = false;
     }
 
 
@@ -79,6 +87,14 @@ class PermsHikerParser
                 $s .= $entry . PHP_EOL;
             }
         });
+
+
+        // apply filters
+        foreach ($this->filters as $f) {
+            $s = $f->filter($s);
+        }
+
+
         if (false === file_put_contents($targetFile, $s)) {
             $this->_error("Could not put the contents into $targetFile");
         }
@@ -153,6 +169,18 @@ class PermsHikerParser
         return $this;
     }
 
+    public function setDirsOnly($dirsOnly)
+    {
+        $this->dirsOnly = $dirsOnly;
+        return $this;
+    }
+
+    public function addFilter(PermsHikerFilterInterface $f)
+    {
+        $this->filters[] = $f;
+        return $this;
+    }
+
 
 
     //------------------------------------------------------------------------------/
@@ -177,6 +205,10 @@ class PermsHikerParser
                 $type = (is_dir($path)) ? 'd' : 'f';
 
                 if (true === $this->permMatch($owner, $ownerGroup, $type, $mode)) {
+                    return false;
+                }
+
+                if (true === $this->dirsOnly && 'f' === $type) {
                     return false;
                 }
 

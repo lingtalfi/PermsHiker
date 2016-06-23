@@ -12,14 +12,11 @@ PermsHiker can be installed as a [planet](https://github.com/lingtalfi/Observer/
 What's the goal?
 -------------------
 
-The goal is to be a useful tool for when you migrate your application from server A to server B.
-Migrating from a server sometimes happen.
+The goal is to snapshot permissions from server A.
 
-When it does, you have to recreate the environment from server A to server B.
-This means you will have to copy the files, recreate the database if any, and re-apply special permissions if any.
+Then, once the files are copied to server B, we use the snapshot to mirror server A'perms to server B.
 
-PermsHiker helps you with the permissions. 
-Basically, you can port permissions and ownerships from server A to server B.
+Permissions include owner, ownership and mode (chown and chmod).
 
 
 
@@ -124,16 +121,19 @@ How does it work?
 
 ![permshiker workflow](https://s19.postimg.org/upg6b3xwj/Perms_Hiker_idea.jpg)
 
-The main idea is to use a medium file (created by PermsHiker automatically) that contains the permission information.
-This special file is called a perms map.
+The main idea is to use a medium file (the snapshot) that contains the permission information of a given source directory.
 
-The workflow is basically:
+This special file is called a [perms map](https://github.com/lingtalfi/PermsHiker#perms-map).
 
-- you have a source directory and a target directory
-- you parse the source directory and PermsHiker create the perms map for you
-- you do your migration things (moving files to server B, recreating databases, ...)
-- now on server B, you tell PermsHiker to read the perms map (now copied on server B), and it automagically re-applies the permissions for you
-- that's all
+Once the permsmap is created, we then copy the source directory to a target directory.
+
+Last, we "apply" the permsmap to the target directory.
+
+This will apply the permissions (owner, ownergroup and mode for every entry listed in the permsmap) to the target directory.
+
+It is possible to adapt the name of the owner/ownergroup during the transfer, that's because our files might be 
+copied to a machine with different accounts.
+
 
 Important: you need to execute the PermsHike as root, because only root can change
 permissions and ownerships.
@@ -143,9 +143,9 @@ permissions and ownerships.
 Perms map
 -------------
 A **perms map** is a simple text file that contains information about 
-the owner and permissions of potentially every file for a given directory.
-It has a human friendly format, so not only computer can use it, but human
-can also take some info out of it if they wanted to do so.
+the owner, ownergroup, and the mode (chmod) of potentially every file for a given directory.
+
+It has a human friendly format.
 
 Here is what a perms map looks like:
 
@@ -156,10 +156,6 @@ Here is what a perms map looks like:
 ./app/dir2:joe:joe:0755
 ```
 
-Links (symlinks) are always ignored by the PermsHiker.
-
-The **perms list** is the list of permissions, as given in the previous example.
-Every entry is written on its own line.
 Each entry is composed of 4 components separated by the colon (:) symbol:
 
 - the path
@@ -168,7 +164,13 @@ Each entry is composed of 4 components separated by the colon (:) symbol:
 - the permission
 
 All paths are relative, and hence start with the dot slash (./) prefix.
- 
+
+
+Note: links (symlinks) are always ignored by the PermsHiker.
+
+Tip: You might be interested in reducing the number of lines of your permsmap file.
+If this is the case, check out the [grouping directories](https://github.com/lingtalfi/PermsHiker#grouping-directories) section in this document.
+
 
 
 Implementation 
@@ -180,47 +182,93 @@ Implementation
 commonPerms
 ---------------
 
-To create the perms map, PermsHiker scans every entry of your application recursively.
-Depending on your application size, that might be a lot of entries to parse.
+To create the perms map, PermsHiker scans every entry (file or dir) of your application recursively.
 
-The idea behind commonPerms is to to ignore files that we don't intend to apply permissions on.
-Typically, we don't need to apply permissions on the directories and files owned by the owner of the application.
+Most of the file will belong to a user, let's say joe.
  
-By doing so, we substantially reduces the number of lines of the perms map, and it becomes more human readable.
+Now again, our goal is to migrate an application from server A to server B.  
+Do we really need to scan joe's files if they have regular permissions (0755 for dirs and 0644 for files)?
 
-Here is how it works.
-Imagine we have an user named ling that owns the source directory (our application).
-To set a commonPerm, we want to define the following:
+Not really, so why not just drop them and make our permsmap lighter.
 
-- owner 
-- owner group
-- type (d=directory, f=file)
-- permission (chmod)
-                
-When those 4 match an entry, then PermsHiker will ignore that entry.
+That's the idea of commonPerms.
+
+By extension, commonPerms is the idea of defining what's regular and what's not.
+
+Then, while the scan operates, only irregular entries are kept in the permsmap file (regular entries are dropped).
+
 
  
-### Applier
+Applier's adapters
+---------------------
+
+Using the Applier (PermsHikerApplier) is pretty straightforward.
+
+We just call its "apply" method.
+
+However, server A's application owner might be called joe, and server B's application owner might be called tom.
+ 
+The Applier needs to know that tom is actually joe.
+ 
+That's the idea of an adapter.
+ 
+It's just a simple map that tells that joe on server A is actually tom on server B. 
 
 
-- adapter
-    
-    the adapter allows you to change the owner and/or ownerGroup to apply
-    to the target directory.
-    
-    This feature was originally developed for tests purposes,
-    but can be useful as long as server A and server B have different user and/or groups.
-    
-    The workflow with adapter is to set the adapter BEFORE you actually call the fromFile 
-    or fromArray methods.
-    
-    There are two separate adapters: one for the owner, and the other for the ownerGroup.
-   
     
     
-    
+Grouping directories
+----------------------
 
 
+Imagine you have a dir1 directory, owned by joe:joe, and with 0755 mode.
+Now imagine that inside dir1, there is only one other directory called subdir1, also owned by joe:joe, and also with 0755 mode.
+
+```
+- dir1:joe:joe:0755
+----- subdir1:joe:joe:0755
+```
+
+In that case, do we really need to apply joe:joe:0755's perms to both directory?
+
+No, we can just recursively apply joe:joe:0755 on the dir1 directory.
+
+That's the idea of grouping directories.
+
+Basically, there is a CommonDirFilter class that we can use, that will read a permsmap file, and will reduce its number
+of lines, based on whether a parent directory has only directories with the same perms or not.
+
+This tool can substantially reduce the number of lines of the permsmap.
+
+Warning: however, this doesn't work at the file level. Meaning that if you have an application that contains one (or more) file(s)
+with special perms, and those perms are important to you, you cannot use the grouping directories technique.
+
+
+Here is an example code of the grouping directories technique.
+
+### as a filter
+
+```php
+$dir = "/some/dir3";
+$file = "_permsmap.txt";
+
+
+$o = PermsHikerParser::create();
+$o->setDirsOnly(true)
+    ->addFilter(CommonDirFilter::create())
+    ->toFile($dir, $file);
+```
+
+
+### as a standalone tool
+
+```php
+$file = "permsmap.txt";
+a(CommonDirFilter::create()->filterFile($file));
+```
+
+
+ 
 
 Dependencies
 ------------------
@@ -233,6 +281,10 @@ Dependencies
 
 History Log
 ------------------
+    
+- 1.1.0 -- 2016-06-23
+
+    - adding CommonDirFilter
     
 - 1.0.0 -- 2016-06-16
 
