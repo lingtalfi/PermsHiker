@@ -5,7 +5,17 @@ PermsHiker
 
 PermsHiker helps migrating permissions from a server to another.
 
-PermsHiker can be installed as a [planet](https://github.com/lingtalfi/Observer/blob/master/article/article.planetReference.eng.md).
+
+PermsHiker is part of the [universe framework](https://github.com/karayabin/universe-snapshot).
+
+
+Install
+==========
+Using the [uni](https://github.com/lingtalfi/universe-naive-importer) command.
+```bash
+uni import PermsHiker
+```
+
 
 
 
