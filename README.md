@@ -13,7 +13,7 @@ Install
 ==========
 Using the [uni](https://github.com/lingtalfi/universe-naive-importer) command.
 ```bash
-uni import PermsHiker
+uni import Ling/PermsHiker
 ```
 
 
@@ -38,8 +38,8 @@ How to use?
 <?php
 
 
-use PermsHiker\Applier\PermsHikerApplier;
-use PermsHiker\Parser\PermsHikerParser;
+use Ling\PermsHiker\Applier\PermsHikerApplier;
+use Ling\PermsHiker\Parser\PermsHikerParser;
 
 require_once "bigbang.php"; // start the local universe (https://github.com/lingtalfi/Observer/blob/master/article/article.planetReference.eng.md)
 

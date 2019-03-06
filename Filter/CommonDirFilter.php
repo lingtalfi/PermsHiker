@@ -1,8 +1,8 @@
 <?php
 
-namespace PermsHiker\Filter;
+namespace Ling\PermsHiker\Filter;
 
-use PermsHiker\Tool\PermsHikerTool;
+use Ling\PermsHiker\Tool\PermsHikerTool;
 
 
 /*

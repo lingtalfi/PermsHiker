@@ -1,11 +1,11 @@
 <?php
 
-namespace PermsHiker\Tool;
+namespace Ling\PermsHiker\Tool;
 
 /*
  * LingTalfi 2016-06-22
  */
-use PermsHiker\Exception\PermsHikerException;
+use Ling\PermsHiker\Exception\PermsHikerException;
 
 class PermsHikerTool {
 

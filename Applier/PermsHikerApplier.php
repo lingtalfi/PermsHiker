@@ -1,10 +1,10 @@
 <?php
 
-namespace PermsHiker\Applier;
+namespace Ling\PermsHiker\Applier;
 
-use Bat\PermTool;
-use PermsHiker\Exception\PermsHikerException;
-use PermsHiker\Tool\PermsHikerTool;
+use Ling\Bat\PermTool;
+use Ling\PermsHiker\Exception\PermsHikerException;
+use Ling\PermsHiker\Tool\PermsHikerTool;
 
 
 /**

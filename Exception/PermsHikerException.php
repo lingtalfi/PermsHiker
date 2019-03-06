@@ -1,6 +1,6 @@
 <?php
 
-namespace PermsHiker\Exception;
+namespace Ling\PermsHiker\Exception;
 
 /*
  * LingTalfi 2016-06-16

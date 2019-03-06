@@ -1,6 +1,6 @@
 <?php
 
-namespace PermsHiker\Filter;
+namespace Ling\PermsHiker\Filter;
 
 /*
  * LingTalfi 2016-06-22

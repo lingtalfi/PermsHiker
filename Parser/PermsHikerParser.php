@@ -1,17 +1,17 @@
 <?php
 
-namespace PermsHiker\Parser;
+namespace Ling\PermsHiker\Parser;
 
 /*
  * LingTalfi 2016-06-16
  * Note: I don't use php7 syntax here because I plan to use this class
  * on old server that I need to backup, but god do I want to.
  */
-use Bat\FileSystemTool;
-use Bat\LocalHostTool;
-use DirScanner\DirScanner;
-use PermsHiker\Exception\PermsHikerException;
-use PermsHiker\Filter\PermsHikerFilterInterface;
+use Ling\Bat\FileSystemTool;
+use Ling\Bat\LocalHostTool;
+use Ling\DirScanner\DirScanner;
+use Ling\PermsHiker\Exception\PermsHikerException;
+use Ling\PermsHiker\Filter\PermsHikerFilterInterface;
 
 class PermsHikerParser
 {
